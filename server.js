@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+    'https://landing-page-frontend-eta-three.vercel.app',
     'http://localhost:5173',
     'http://localhost:3000'
 ].filter(Boolean);
@@ -54,7 +55,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
  * @desc    Collect and store user emails
  * @access  Public
  */
-app.post('/subscribe',
+app.post('/send-email',
     limiter,
     [
         body('email')
