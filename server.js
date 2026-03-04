@@ -15,23 +15,37 @@ const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
 
-// ✅ Allow ALL Vercel deployments + localhost
+/* ================================
+   CORS CONFIGURATION (FIXED)
+================================ */
+
+const allowedOrigins = [
+    "https://zanika.in",
+    "https://www.zanika.in",
+    "https://landing-page-frontend-ten.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000"
+];
+
 app.use(cors({
     origin: function (origin, callback) {
+
+        // Allow server-to-server or curl requests (no origin)
         if (!origin) return callback(null, true);
 
-        if (
-            origin.includes('vercel.app') ||
-            origin.includes('localhost')
-        ) {
+        if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
 
-        return callback(new Error('Not allowed by CORS'));
+        return callback(new Error("Not allowed by CORS"));
     },
-    methods: ['GET', 'POST'],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
     credentials: true
 }));
+
+// ✅ Handle preflight requests explicitly
+app.options("*", cors());
 
 app.use(express.json());
 
@@ -147,6 +161,12 @@ app.get('/health', async (req, res) => {
 
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err.stack);
+
+    // If CORS error
+    if (err.message === "Not allowed by CORS") {
+        return res.status(403).json({ error: "CORS policy does not allow this origin." });
+    }
+
     res.status(500).json({
         error: process.env.NODE_ENV === 'production'
             ? 'Internal server error'
